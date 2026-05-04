@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void do_wc_l(FILE *f);
+static void do_wc_l(FILE *f, char *filename);
 
 int main(int argc, char *argv[])
 {
   if (argc == 1)
   {
-    do_wc_l(stdin);
+    do_wc_l(stdin, "STDIN");
   }
   else
   {
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         perror(argv[i]);
         exit(1);
       }
-      do_wc_l(f);
+      do_wc_l(f, argv[i]);
       fclose(f);
     }
   }
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 }
 
 static void
-do_wc_l(FILE *f)
+do_wc_l(FILE *f, char *filename)
 {
   unsigned long n;
   int c;
@@ -51,5 +51,5 @@ do_wc_l(FILE *f)
   {
     n++;
   }
-  printf("%lu\n", n);
+  printf("%s %lu\n", filename, n);
 }
