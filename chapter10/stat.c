@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
     perror(argv[1]);
     exit(1);
   }
-  printf("type\t%o (%s)\n", (st.st_mode & __S_IFMT), filetype(st.st_mode));
-  printf("mode\t%o\n", st.st_mode & ~__S_IFMT);
+  printf("type\t%o (%s)\n", (st.st_mode & S_IFMT), filetype(st.st_mode));
+  printf("mode\t%o\n", st.st_mode & ~S_IFMT);
   printf("dev\t%llu\n", (unsigned long long)st.st_dev);
   printf("ino\t%lu\n", (unsigned long)st.st_ino);
   printf("rdev\t%llu\n", (unsigned long long)st.st_rdev);
