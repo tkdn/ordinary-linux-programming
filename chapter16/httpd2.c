@@ -515,6 +515,24 @@ static void noop_handler(int sig)
   ;
 }
 
+static void become_daemon(void)
+{
+  int n;
+
+  if (chdir("/") < 0)
+    log_exit("chdir(2) failed: %s", strerror(errno));
+  freopen("/dev/null", "r", stdin);
+  freopen("/dev/null", "w", stdout);
+  freopen("/dev/null", "w", stderr);
+  n = fork();
+  if (n < 0)
+    log_exit("fork(2) failed: %s", strerror(errno));
+  if (n != 0)
+    _exit(0);
+  if (setsid() < 0)
+    log_exit("setsid(2) failed: %s", strerror(errno));
+}
+
 int listen_socket(char *port)
 {
   struct addrinfo hints, *res, *ai;
