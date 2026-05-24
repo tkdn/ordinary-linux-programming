@@ -16,6 +16,7 @@
 #include <syslog.h>
 #define _GNU_SOURCE
 #include <getopt.h>
+#include <netdb.h>
 
 #define SERVER_NAME "LittleHTTP"
 #define SERVER_VERSION "1.0"
@@ -57,7 +58,7 @@ static void detach_children(void);
 static void noop_handler(int sig);
 static void become_daemon(void);
 static int listen_socket(char *port);
-static void server_main(int server, char *docroot);
+static void server_main(int server_fd, char *docroot);
 
 static int debug_mode = 0;
 static struct option longopts[] = {
@@ -491,4 +492,87 @@ static void log_exit(char *fmt, ...)
   fputc('\n', stderr);
   va_end(ap);
   exit(1);
+}
+
+#define MAX_BACKLOG 5
+#define DEFAULT_PORT "80"
+
+static void detach_children(void)
+{
+  struct sigaction act;
+
+  act.sa_handler = noop_handler;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = SA_RESTART | SA_NOCLDWAIT;
+  if (sigaction(SIGCHLD, &act, NULL) < 0)
+  {
+    log_exit("sigaction() failed: %s", strerror(errno));
+  }
+}
+
+static void noop_handler(int sig)
+{
+  ;
+}
+
+int listen_socket(char *port)
+{
+  struct addrinfo hints, *res, *ai;
+  int err;
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_PASSIVE;
+  if ((err = getaddrinfo(NULL, port, &hints, &res)) != 0)
+    log_exit(gai_strerror(err));
+  for (ai = res; ai; ai = ai->ai_next)
+  {
+    int sock;
+
+    sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+    if (sock < 0)
+      continue;
+    if (bind(sock, ai->ai_addr, ai->ai_addrlen) < 0)
+    {
+      close(sock);
+      continue;
+    }
+    if (listen(sock, MAX_BACKLOG) < 0)
+    {
+      close(sock);
+      continue;
+    }
+    freeaddrinfo(res);
+    return sock;
+  }
+  log_exit("failed to listen socket");
+  return -1; // unreached.
+}
+
+static void server_main(int server_fd, char *docroot)
+{
+  for (;;)
+  {
+    struct sockaddr_storage addr;
+    socklen_t addrlen = sizeof addr;
+    int sock;
+    int pid;
+
+    sock = accept(server_fd, (struct sockaddr *)&addr, &addrlen);
+    if (sock < 0)
+      log_exit("accetp(2) failed: %s", strerror(errno));
+    pid = fork();
+    if (pid < 0)
+      exit(3);
+    if (pid == 0)
+    {
+      FILE *inf = fdopen(sock, "r");
+      FILE *outf = fdopen(sock, "w");
+
+      service(inf, outf, docroot);
+      exit(0);
+    }
+    close(sock);
+  }
 }
