@@ -64,7 +64,7 @@ static int debug_mode = 0;
 static struct option longopts[] = {
     {"debug", no_argument, &debug_mode, 1},
     {"chroot", no_argument, NULL, 'c'},
-    {"user", no_argument, NULL, 'u'},
+    {"user", required_argument, NULL, 'u'},
     {"group", required_argument, NULL, 'g'},
     {"port", required_argument, NULL, 'p'},
     {"help", no_argument, NULL, 'h'},
@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
       break;
     case 'p':
       port = optarg;
+      break;
     case 'h':
       fprintf(stdout, USAGE, argv[0]);
       exit(0);
