@@ -51,7 +51,7 @@ static char *build_fpath(char *docroot, char *path);
 static void free_fileinfo(struct FileInfo *info);
 static char *guess_content_type(struct FileInfo *info);
 static void *xmalloc(size_t sz);
-static void log_exit(char *fmt, ...);
+static void log_exit(const char *fmt, ...);
 
 static void setup_environment(char *root, char *user, char *group);
 static void detach_children(void);
@@ -484,7 +484,7 @@ static void *xmalloc(size_t size)
   return p;
 }
 
-static void log_exit(char *fmt, ...)
+static void log_exit(const char *fmt, ...)
 {
   va_list ap;
 
