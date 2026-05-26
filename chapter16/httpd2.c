@@ -533,7 +533,16 @@ static void setup_environment(char *root, char *user, char *group)
     fprintf(stderr, "no such user: %s\n", user);
     exit(1);
   }
-  chroot(root);
+  if (chroot(root) < 0)
+  {
+    perror("chroot(2)");
+    exit(1);
+  }
+  if (chdir("/") < 0)
+  {
+    perror("chdir(2)");
+    exit(1);
+  }
   if (setuid(pw->pw_uid) < 0)
   {
     perror("setuid(2)");
